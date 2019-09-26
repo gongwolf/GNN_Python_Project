@@ -24,7 +24,7 @@ def DTModel(train_data, test_data):
     #       test_data_X.shape, test_data_Y.shape)
 
     # Train and predict the model
-    clf = tree.DecisionTreeClassifier(criterion='entropy',max_depth=6)
+    clf = tree.DecisionTreeClassifier()
     clf.fit(train_data_X, train_data_Y)
     y_pred = clf.predict(test_data_X)
     print('DT MODEL  [all features] Accuracy: {:0.2%}' .format(
@@ -120,15 +120,11 @@ print(train_data.shape, " ", test_data.shape)
 # ### find the max and min value for each colunm in train data and test data
 train_max = train_data.max(axis=0)
 train_min = train_data.min(axis=0)
-train_mean = train_data.mean(axis=0)
-train_std = train_data.std(axis=0)
 train_max_min = pd.concat([train_max, train_min], axis=1)
 
 
 test_max = test_data.max(axis=0)
 test_min = test_data.min(axis=0)
-test_mean = test_data.mean(axis=0)
-test_std = test_data.std(axis=0)
 test_max_min = pd.concat([test_max, test_min], axis=1)
 
 train_min.loc["age"], " ", train_max.loc["age"]
@@ -141,18 +137,14 @@ train_data.head(10)
 normal_train_data = train_data.copy()
 for feature_name in train_max_min.index.values[:-1]:
     # print(feature_name)
-    # normal_train_data[feature_name] = (
-    #     train_data[feature_name] - train_min.loc[feature_name]) / train_max.loc[feature_name]
     normal_train_data[feature_name] = (
-        train_data[feature_name] - train_mean.loc[feature_name]) / train_std.loc[feature_name]
+        train_data[feature_name] - train_min.loc[feature_name]) / train_max.loc[feature_name]
 
 normal_test_data = test_data.copy()
 for feature_name in test_max_min.index.values[:-1]:
     # print(feature_name)
-    # normal_test_data[feature_name] = (
-    #     test_data[feature_name] - test_min.loc[feature_name]) / test_max.loc[feature_name]
     normal_test_data[feature_name] = (
-        test_data[feature_name] - test_mean.loc[feature_name]) / test_std.loc[feature_name]
+        test_data[feature_name] - test_min.loc[feature_name]) / test_max.loc[feature_name]
 
 normal_train_data.head(10)
 

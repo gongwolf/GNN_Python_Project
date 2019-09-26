@@ -171,12 +171,11 @@ print(clean_train_data_X.shape, clean_train_data_Y.shape,
 
 
 # Train and predict the model
-clf = tree.DecisionTreeClassifier(criterion='entropy',max_depth=6)
+clf = tree.DecisionTreeClassifier()
 clf.fit(clean_train_data_X, clean_train_data_Y)
 y_pred = clf.predict(clean_test_data_X)
 print('[all features] Accuracy: {:0.2%}' .format(
     accuracy_score(clean_test_data_Y, y_pred)))
-
 
 # single features
 for col in clean_train_data_X.columns:

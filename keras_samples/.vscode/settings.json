@@ -1,7 +1,3 @@
 {
-    "python.pythonPath": "/home/gqxwolf/mydata/GNN_Projects/bin/python",
-    "python.linting.pylintEnabled": false,
-    "python.linting.enabled": true,
-    "python.linting.flake8Enabled": false,
-    "python.linting.pep8Enabled": true
+    "python.pythonPath": "/home/gqxwolf/mydata/GNN_Projects/bin/python"
 }

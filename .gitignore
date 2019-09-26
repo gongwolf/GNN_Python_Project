@@ -2,6 +2,9 @@ bin
 include
 lib
 share
+etc
+
+cora
 
 Adults_dataset/2019-09-1
 Adults_dataset/data

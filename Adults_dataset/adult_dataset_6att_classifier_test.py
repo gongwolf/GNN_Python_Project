@@ -32,7 +32,7 @@ def DTModel(train_data, test_data):
     #       test_data_X.shape, test_data_Y.shape)
 
     # Train and predict the model
-    clf = tree.DecisionTreeClassifier(criterion='entropy',max_depth=6)
+    clf = tree.DecisionTreeClassifier()
     clf.fit(train_data_X, train_data_Y)
     y_pred = clf.predict(test_data_X)
     print('DT MODEL  [all features] Accuracy: {:0.2%}' .format(
@@ -275,14 +275,14 @@ train_data_6att_clean_sample_encoded, test_data_6att_clean_sample_encoded = getB
 saveSamples(train_data_6att_clean_sample_encoded,
             test_data_6att_clean_sample_encoded)
 
-# assert sum(train_data_6att_clean_sample_encoded['income']
-#            == 1) == 5000, "wrong sampled training file (1)"
-# assert sum(train_data_6att_clean_sample_encoded['income']
-#            == 0) == 5000, "wrong sampled training file (0)"
-# assert sum(test_data_6att_clean_sample_encoded['income']
-#            == 1) == 500, "wrong sampled test file (1)"
-# assert sum(test_data_6att_clean_sample_encoded['income']
-#            == 0) == 500, "wrong sampled test file (0)"
+assert sum(train_data_6att_clean_sample_encoded['income']
+           == 1) == 5000, "wrong sampled training file (1)"
+assert sum(train_data_6att_clean_sample_encoded['income']
+           == 0) == 5000, "wrong sampled training file (0)"
+assert sum(test_data_6att_clean_sample_encoded['income']
+           == 1) == 500, "wrong sampled test file (1)"
+assert sum(test_data_6att_clean_sample_encoded['income']
+           == 0) == 500, "wrong sampled test file (0)"
 # %%
 dt_att_acc = [0]*10
 dt_att_sample_acc = [0]*10
