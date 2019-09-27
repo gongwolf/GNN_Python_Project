@@ -18,10 +18,12 @@ from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
-tf.enable_eager_execution()
+# tf.enable_eager_execution()
 
 
 plotly.offline.init_notebook_mode(connected=True)
+# the eager execution is enabled by default in tf2.0
+print(tf.executing_eagerly())
 
 
 # %%
@@ -183,7 +185,6 @@ dataset = dataset.batch(BATCH_SIZE, drop_remainder=True)
 vocab_inp_size, vocab_tar_size
 
 
-
 # %%
 def gru(units):
   # If you have a GPU, we recommend using CuDNNGRU(provides a 3x speedup than GRU)
@@ -281,7 +282,8 @@ decoder = Decoder(vocab_tar_size, embedding_dim, units, BATCH_SIZE)
 
 
 # %%
-optimizer = tf.train.AdamOptimizer()
+# optimizer = tf.train.AdamOptimizer()
+optimizer = tf.keras.optimizers.Adam()
 
 
 def loss_function(real, pred):
@@ -310,6 +312,7 @@ for epoch in range(EPOCHS):
 
     for (batch, (inp, targ)) in enumerate(dataset):
         loss = 0
+        print("{} {} {}".format(batch, input.shape, targ.shape))
 
         with tf.GradientTape() as tape:
             enc_output, enc_hidden = encoder(inp, hidden)
