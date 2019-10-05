@@ -146,11 +146,11 @@ class GCN(Model):
 
     def _loss(self):
         # Weight decay loss
-        # for var in self.layers[0].vars.values():
-        #     self.loss += FLAGS.weight_decay_1 * tf.nn.l2_loss(var)
+        for var in self.layers[0].vars.values():
+            self.loss += FLAGS.weight_decay_1 * tf.nn.l2_loss(var)
         
-        # for var in self.layers[1].vars.values():
-        #     self.loss += FLAGS.weight_decay_2 * tf.nn.l2_loss(var)
+        for var in self.layers[1].vars.values():
+            self.loss += FLAGS.weight_decay_2 * tf.nn.l2_loss(var)
 
         # Cross entropy error
         self.loss += masked_softmax_cross_entropy(self.outputs, self.placeholders['labels'],

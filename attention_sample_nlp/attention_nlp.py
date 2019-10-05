@@ -312,12 +312,14 @@ for epoch in range(EPOCHS):
 
     for (batch, (inp, targ)) in enumerate(dataset):
         loss = 0
-        print("{} {} {}".format(batch, input.shape, targ.shape))
+        print("{} {} {}".format(batch, inp.shape, targ.shape))
 
         with tf.GradientTape() as tape:
             enc_output, enc_hidden = encoder(inp, hidden)
 
             dec_hidden = enc_hidden
+            print(enc_hidden.shape) #(64,1024)
+            print(enc_output.shape) #(64, 36, 1024)
 
             dec_input = tf.expand_dims(
                 [targ_lang.word2idx['<start>']] * BATCH_SIZE, 1)

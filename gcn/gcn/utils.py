@@ -55,7 +55,7 @@ def load_data(dataset_str):
     x, y, tx, ty, allx, ally, graph = tuple(objects)
    
     test_idx_reorder = parse_index_file("data/ind.{}.test.index".format(dataset_str))
-    # print("size of the test data set {}".format(len(test_idx_reorder)))
+    print("size of the test data set {}".format(len(test_idx_reorder)))
     test_idx_range = np.sort(test_idx_reorder)
 
     if dataset_str == 'citeseer':
@@ -69,19 +69,26 @@ def load_data(dataset_str):
         ty_extended[test_idx_range-min(test_idx_range), :] = ty
         ty = ty_extended
 
-    features = sp.vstack((allx, tx)).tolil() ##feature vectors for all the 
-
+    features = sp.vstack((allx, tx)).tolil() ##feature vectors for all the dataset (training + testing)
+    print(allx.shape)
+    print(x.shape)
+    print(tx.shape)
+    print(features.shape)
     ## re-order the features as the order of the test_idx_reorder, don't know the reason
     features[test_idx_reorder, :] = features[test_idx_range, :] 
     adj = nx.adjacency_matrix(nx.from_dict_of_lists(graph)) ## find the adjacent matrix of the graph 
 
     labels = np.vstack((ally, ty))
     labels[test_idx_reorder, :] = labels[test_idx_range, :]
+    print(ally.shape)
+    print(y.shape)
+    print(ty.shape)
+    print(labels.shape)
 
     idx_test = test_idx_range.tolist()
     idx_train = range(len(y))
     idx_val = range(len(y), len(y)+500)
-    # print(len(idx_val))
+    print("test:{} train:{} validation:{} ".format(len(idx_test),len(idx_train),len(idx_val)))
 
     train_mask = sample_mask(idx_train, labels.shape[0])
     val_mask = sample_mask(idx_val, labels.shape[0])
@@ -96,7 +103,13 @@ def load_data(dataset_str):
     y_train[train_mask, :] = labels[train_mask, :]
     y_val[val_mask, :] = labels[val_mask, :]
     y_test[test_mask, :] = labels[test_mask, :]
-    print(y_train[1])
+    
+    print("##########################")
+    print(features.shape)
+    print(y_train.shape)
+    print(y_val.shape)
+    print(y_test.shape)
+    
 
     return adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask
 
@@ -131,6 +144,7 @@ def preprocess_features(features):
     r_mat_inv = sp.diags(r_inv)
     # print(r_mat_inv.toarray())
     features = r_mat_inv.dot(features)
+    print(type(features))
     return sparse_to_tuple(features)
 
 
