@@ -1,0 +1,46 @@
+TensorFlow 2.0 Upgrade Script
+-----------------------------
+Converted 1 files
+Detected 3 issues that require attention
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+File: tf_word2vec.py
+--------------------------------------------------------------------------------
+tf_word2vec.py:122:10: WARNING: tf.nn.embedding_lookup requires manual check. `partition_strategy` has been removed from tf.nn.embedding_lookup.  The 'div' strategy will be used by default.
+tf_word2vec.py:142:21: WARNING: tf.nn.embedding_lookup requires manual check. `partition_strategy` has been removed from tf.nn.embedding_lookup.  The 'div' strategy will be used by default.
+tf_word2vec.py:204:8: WARNING: tf.nn.nce_loss requires manual check. `partition_strategy` has been removed from tf.nn.nce_loss.  The 'div' strategy will be used by default.
+================================================================================
+Detailed log follows:
+
+================================================================================
+--------------------------------------------------------------------------------
+Processing file 'tf_word2vec.py'
+ outputting to 'tf_word2vec_v2.py'
+--------------------------------------------------------------------------------
+
+115:17: INFO: Renamed 'tf.placeholder' to 'tf.compat.v1.placeholder'
+116:18: INFO: Renamed 'tf.placeholder' to 'tf.compat.v1.placeholder'
+121:6: INFO: Renamed 'tf.random_uniform' to 'tf.random.uniform'
+122:10: INFO: Added keywords to args of function 'tf.nn.embedding_lookup'
+122:10: WARNING: tf.nn.embedding_lookup requires manual check. `partition_strategy` has been removed from tf.nn.embedding_lookup.  The 'div' strategy will be used by default.
+126:6: INFO: Renamed 'tf.truncated_normal' to 'tf.random.truncated_normal'
+129:15: INFO: Added keywords to args of function 'tf.transpose'
+129:38: INFO: Added keywords to args of function 'tf.transpose'
+129:61: INFO: Added keywords to args of function 'tf.transpose'
+134:18: INFO: Added keywords to args of function 'tf.reduce_mean'
+134:33: INFO: Changing labels arg of tf.nn.softmax_cross_entropy_with_logits to tf.stop_gradient(labels). Please check this transformation.
+
+137:14: INFO: Renamed 'tf.train.GradientDescentOptimizer' to 'tf.compat.v1.train.GradientDescentOptimizer'
+140:17: INFO: Added keywords to args of function 'tf.reduce_sum'
+140:17: INFO: Renamed keyword argument for tf.reduce_sum from keep_dims to keepdims
+142:21: INFO: Added keywords to args of function 'tf.nn.embedding_lookup'
+142:21: WARNING: tf.nn.embedding_lookup requires manual check. `partition_strategy` has been removed from tf.nn.embedding_lookup.  The 'div' strategy will be used by default.
+148:9: INFO: Renamed 'tf.global_variables_initializer' to 'tf.compat.v1.global_variables_initializer'
+152:9: INFO: Renamed 'tf.Session' to 'tf.compat.v1.Session'
+199:8: INFO: Renamed 'tf.truncated_normal' to 'tf.random.truncated_normal'
+203:15: INFO: Added keywords to args of function 'tf.reduce_mean'
+204:8: WARNING: tf.nn.nce_loss requires manual check. `partition_strategy` has been removed from tf.nn.nce_loss.  The 'div' strategy will be used by default.
+211:16: INFO: Renamed 'tf.train.GradientDescentOptimizer' to 'tf.compat.v1.train.GradientDescentOptimizer'
+214:11: INFO: Renamed 'tf.global_variables_initializer' to 'tf.compat.v1.global_variables_initializer'
+--------------------------------------------------------------------------------
+

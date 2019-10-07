@@ -1,6 +1,6 @@
 # %% [makrdown]
 import os
-baseline_index_path = "/home/gqxwolf/mydata/projectData/BackBone/indexes/baseline_2000_4_3"
+baseline_index_path = "/home/gqxwolf/mydata/projectData/BackBone/indexes/baseline_1000_4_3"
 index_list = os.listdir(baseline_index_path)
 
 
