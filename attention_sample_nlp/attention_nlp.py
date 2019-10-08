@@ -182,6 +182,16 @@ dataset = tf.data.Dataset.from_tensor_slices(
     (input_tensor_train, target_tensor_train)).shuffle(BUFFER_SIZE)
 dataset = dataset.batch(BATCH_SIZE, drop_remainder=True)
 
+print(input_tensor_train.shape)
+print(target_tensor_train.shape)
+for (batch, (inp, targ)) in enumerate(dataset):
+    print("{} {} {} {} ".format(batch, inp.shape, targ.shape,  targ.shape[1]))
+    for t in range(1, targ.shape[1]):
+        print(targ[:,t].shape)
+    break
+
+
+
 vocab_inp_size, vocab_tar_size
 
 
@@ -318,8 +328,6 @@ for epoch in range(EPOCHS):
             enc_output, enc_hidden = encoder(inp, hidden)
 
             dec_hidden = enc_hidden
-            print(enc_hidden.shape) #(64,1024)
-            print(enc_output.shape) #(64, 36, 1024)
 
             dec_input = tf.expand_dims(
                 [targ_lang.word2idx['<start>']] * BATCH_SIZE, 1)
