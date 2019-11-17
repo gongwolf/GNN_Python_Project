@@ -162,6 +162,8 @@ print(clean_test_data.info())
 # all features
 # Split the data frame
 clean_train_data_X = clean_train_data.iloc[:, :-1]
+print(type(clean_train_data))
+print(type(clean_train_data_X))
 clean_train_data_Y = clean_train_data.iloc[:, -1:]
 
 clean_test_data_X = clean_test_data.iloc[:, :-1]

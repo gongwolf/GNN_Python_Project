@@ -71,5 +71,3 @@ with tf.Session() as sess:
             avg_cost += c / total_batch
         print("Epoch:", (epoch + 1), "cost =", "{:.3f}".format(avg_cost))
    print(sess.run(accuracy, feed_dict={x: mnist.test.images, y: mnist.test.labels}))
-
-#%%

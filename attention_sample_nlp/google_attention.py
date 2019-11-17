@@ -80,6 +80,7 @@ print(en[-1])
 print(sp[-1])
 
 # %%
+# get the max length of the sentence in the tensor which is used to padding
 
 
 def max_length(tensor):
@@ -101,16 +102,15 @@ def tokenize(lang):
 
     return tensor, lang_tokenizer
 
+
 # %%
 
 
 def load_dataset(path, num_examples=None):
     # creating cleaned input, output pairs
     targ_lang, inp_lang = create_dataset(path, num_examples)
-
     input_tensor, inp_lang_tokenizer = tokenize(inp_lang)
     target_tensor, targ_lang_tokenizer = tokenize(targ_lang)
-
     return input_tensor, target_tensor, inp_lang_tokenizer, targ_lang_tokenizer
 
 
@@ -126,6 +126,7 @@ max_length_targ, max_length_inp = max_length(
     target_tensor), max_length(input_tensor)
 
 print(input_tensor[-1], " ", len(input_tensor[-1]))
+print(target_tensor[-1], " ", len(target_tensor[-1]))
 print(max_length_targ, " ", max_length_inp)
 # %%
 # Creating training and validation sets using an 80-20 split
@@ -138,6 +139,7 @@ print(len(input_tensor_train), len(target_tensor_train),
 
 
 # %%
+# trans the index to words by using the token lang
 def convert(lang, tensor):
     for t in tensor:
         if t != 0:
@@ -196,14 +198,23 @@ class Encoder(tf.keras.Model):
 
 
 # %%
+# embeding each word into the code with 256 dimensions
+# [[4], [20]] -> [[0.25, 0.1], [0.6, -0.2]]
+# the output dimension of the GRN is 1024
 encoder = Encoder(vocab_inp_size, embedding_dim, units, BATCH_SIZE)
 
 # sample input
+print('input shape: (batch size, sequence length, units) {}'.format(
+    example_input_batch.shape))
 sample_hidden = encoder.initialize_hidden_state()
+print('Initialized Encoder Hidden state shape: (batch size, units) {}'.format(
+    sample_hidden.shape))
 sample_output, sample_hidden = encoder(example_input_batch, sample_hidden)
 print('Encoder output shape: (batch size, sequence length, units) {}'.format(
     sample_output.shape))
 print('Encoder Hidden state shape: (batch size, units) {}'.format(sample_hidden.shape))
+print(sample_output[0][0].shape)
+
 
 # %%
 
@@ -226,6 +237,13 @@ class BahdanauAttention(tf.keras.Model):
         # the shape of the tensor before applying self.V is (batch_size, max_length, units)
         score = self.V(tf.nn.tanh(
             self.W1(values) + self.W2(hidden_with_time_axis)))
+        # print(values.shape)
+        # print(self.W1(values).shape)
+        # print(self.W2(hidden_with_time_axis).shape)
+        # print((self.W1(values) + self.W2(hidden_with_time_axis)).shape)
+        # print((tf.nn.tanh(self.W1(values) + self.W2(hidden_with_time_axis))).shape)
+        # print((self.V(tf.nn.tanh(self.W1(values) + self.W2(hidden_with_time_axis)))).shape)
+        # print((tf.nn.tanh(self.W1(values) + self.W2(hidden_with_time_axis)).shape)
 
         # a=self.W1(values) shape is  (batch_size, max_length, hidden size)
         # b=self.W1(hidden_with_time_axis) shape is (batch_size, 1, hidden size)
@@ -234,26 +252,30 @@ class BahdanauAttention(tf.keras.Model):
         # score shape == (batch_size, max_length, 1)
 
         # attention_weights shape == (batch_size, max_length, 1)
-        attention_weights = tf.nn.softmax(score, axis=1)
-
+        attention_weights=tf.nn.softmax(score, axis=1)
+        # print(attention_weights.shape)
         # context_vector shape after sum == (batch_size, hidden_size)
         # attention_weights shape == (batch_size, max_length, 1)
         # values shape  = (batch_size, max_length, hidden_size)
         # eacho row of values is mutiplied with attention_weights
 
+
+        # so far, its shape == values shape  = (batch_size, max_length, hidden_size)
+        context_vector=attention_weights * values
+        # print(context_vector.shape)
+        # print(attention_weights.shape)
+        # print(values.shape)
         # print(attention_weights[0][1][0])
         # print(values[0][1][:10])
-        # so far, its shape == values shape  = (batch_size, max_length, hidden_size)
-        context_vector = attention_weights * values
         # print(context_vector[0][1][:10])
-        context_vector = tf.reduce_sum(context_vector, axis=1)
+        context_vector=tf.reduce_sum(context_vector, axis=1)
 
         return context_vector, attention_weights
 
 
 # %%
-attention_layer = BahdanauAttention(10)
-attention_result, attention_weights = attention_layer(
+attention_layer=BahdanauAttention(10)
+attention_result, attention_weights=attention_layer(
     sample_hidden, sample_output)
 
 print("Attention result shape: (batch size, units) {}".format(attention_result.shape))
@@ -265,42 +287,39 @@ print("Attention weights shape: (batch_size, sequence_length, 1) {}".format(
 class Decoder(tf.keras.Model):
     def __init__(self, vocab_size, embedding_dim, dec_units, batch_sz):
         super(Decoder, self).__init__()
-        self.batch_sz = batch_sz
-        self.dec_units = dec_units
-        self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
-        self.gru = tf.keras.layers.GRU(self.dec_units,
+        self.batch_sz=batch_sz
+        self.dec_units=dec_units
+        self.embedding=tf.keras.layers.Embedding(vocab_size, embedding_dim)
+        self.gru=tf.keras.layers.GRU(self.dec_units,
                                        return_sequences=True,
                                        return_state=True,
                                        recurrent_initializer='glorot_uniform')
-        self.fc = tf.keras.layers.Dense(vocab_size)
+        self.fc=tf.keras.layers.Dense(vocab_size)
 
         # used for attention
-        self.attention = BahdanauAttention(self.dec_units)
+        self.attention=BahdanauAttention(self.dec_units)
 
     def call(self, x, hidden, enc_output):
         # enc_output shape == (batch_size, max_length, hidden_size)
         # context_vector shape == (batch_size, hidden_size)
         # attention_weights shape == (batch_size, max_length, 1)
-        context_vector, attention_weights = self.attention(hidden, enc_output)
-
+        context_vector, attention_weights=self.attention(hidden, enc_output)
         # x shape before passing through embeding == (batch_size, 1)
         # x shape after passing through embedding == (batch_size, 1, embedding_dim)
-        x = self.embedding(x)
+        x=self.embedding(x)
 
         # x shape after concatenation == (batch_size, 1, embedding_dim + hidden_size)
         # concatenate the context_vector with the embeded input x
-        # print(tf.expand_dims(context_vector, 1)[0][0])
+        # print(tf.expand_dims(context_vector, 1).shape)
         # print(x[0])
-        x = tf.concat([tf.expand_dims(context_vector, 1), x], axis=-1)
-        # print(x[0])
+        x=tf.concat([tf.expand_dims(context_vector, 1), x], axis=-1)
         # passing the concatenated vector to the GRU
-        output, state = self.gru(x)
-
+        output, state=self.gru(x)
         # output shape == (batch_size * 1, hidden_size)
-        output = tf.reshape(output, (-1, output.shape[2]))
+        output=tf.reshape(output, (-1, output.shape[2]))
 
         # output shape == (batch_size, vocab)
-        x = self.fc(output)
+        x=self.fc(output)
 
         # state shape == (batch_size, hidden_size)
         # attention_weights shape == (batch_size, max_length, 1)
@@ -308,9 +327,9 @@ class Decoder(tf.keras.Model):
 
 
 # %%
-decoder = Decoder(vocab_tar_size, embedding_dim, units, BATCH_SIZE)
+decoder=Decoder(vocab_tar_size, embedding_dim, units, BATCH_SIZE)
 
-sample_decoder_output, sample_decoder_state, sample_decoder_attention_weights = decoder(tf.random.uniform((64, 1)),
+sample_decoder_output, sample_decoder_state, sample_decoder_attention_weights=decoder(tf.random.uniform((64, 1)),
                                                                                         sample_hidden, sample_output)
 
 print('Decoder output shape: (batch_size, vocab size) {}'.format(
@@ -321,26 +340,26 @@ print('Decoder output attention weights shape: (batch_size, vocab size) {}'.form
     sample_decoder_attention_weights.shape))
 
 # %%
-optimizer = tf.keras.optimizers.Adam()
-loss_object = tf.keras.losses.SparseCategoricalCrossentropy(
+optimizer=tf.keras.optimizers.Adam()
+loss_object=tf.keras.losses.SparseCategoricalCrossentropy(
     from_logits=True, reduction='none')
 
 
 def loss_function(real, pred):
     # the truth value of NOT x element-wise
-    mask = tf.math.logical_not(tf.math.equal(real, 0))
-    loss_ = loss_object(real, pred)
+    mask=tf.math.logical_not(tf.math.equal(real, 0))
+    loss_=loss_object(real, pred)
 
-    mask = tf.cast(mask, dtype=loss_.dtype)
+    mask=tf.cast(mask, dtype=loss_.dtype)
     loss_ *= mask
 
     return tf.reduce_mean(loss_)
 
 
 # %%
-checkpoint_dir = './training_checkpoints'
-checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
-checkpoint = tf.train.Checkpoint(optimizer=optimizer,
+checkpoint_dir='./training_checkpoints'
+checkpoint_prefix=os.path.join(checkpoint_dir, "ckpt")
+checkpoint=tf.train.Checkpoint(optimizer=optimizer,
                                  encoder=encoder,
                                  decoder=decoder)
 
@@ -355,49 +374,49 @@ checkpoint = tf.train.Checkpoint(optimizer=optimizer,
 # 7. The final step is to calculate the gradients and apply it to the optimizer and backpropagate.
 
 
-#%%
+# %%
 @tf.function
 def train_step(inp, targ, enc_hidden):
-  loss = 0
+  loss=0
 
   with tf.GradientTape() as tape:
-    enc_output, enc_hidden = encoder(inp, enc_hidden)
+    enc_output, enc_hidden=encoder(inp, enc_hidden)
 
-    dec_hidden = enc_hidden
+    dec_hidden=enc_hidden
 
-    dec_input = tf.expand_dims([targ_lang.word_index['<start>']] * BATCH_SIZE, 1)
+    dec_input=tf.expand_dims([targ_lang.word_index['<start>']] * BATCH_SIZE, 1)
 
     # Teacher forcing - feeding the target as the next input
     for t in range(1, targ.shape[1]):
       # passing enc_output to the decoder
-      predictions, dec_hidden, _ = decoder(dec_input, dec_hidden, enc_output)
+      predictions, dec_hidden, _=decoder(dec_input, dec_hidden, enc_output)
 
       loss += loss_function(targ[:, t], predictions)
 
       # using teacher forcing
-      dec_input = tf.expand_dims(targ[:, t], 1)
+      dec_input=tf.expand_dims(targ[:, t], 1)
 
-  batch_loss = (loss / int(targ.shape[1]))
+  batch_loss=(loss / int(targ.shape[1]))
 
-  variables = encoder.trainable_variables + decoder.trainable_variables
+  variables=encoder.trainable_variables + decoder.trainable_variables
 
-  gradients = tape.gradient(loss, variables)
+  gradients=tape.gradient(loss, variables)
 
   optimizer.apply_gradients(zip(gradients, variables))
 
   return batch_loss
 
-#%%
-EPOCHS = 10
+# %%
+EPOCHS=10
 
 for epoch in range(EPOCHS):
-  start = time.time()
+  start=time.time()
 
-  enc_hidden = encoder.initialize_hidden_state()
-  total_loss = 0
+  enc_hidden=encoder.initialize_hidden_state()
+  total_loss=0
 
   for (batch, (inp, targ)) in enumerate(dataset.take(steps_per_epoch)):
-    batch_loss = train_step(inp, targ, enc_hidden)
+    batch_loss=train_step(inp, targ, enc_hidden)
     total_loss += batch_loss
 
     if batch % 100 == 0:
@@ -406,42 +425,42 @@ for epoch in range(EPOCHS):
                                                      batch_loss.numpy()))
   # saving (checkpoint) the model every 2 epochs
   if (epoch + 1) % 2 == 0:
-    checkpoint.save(file_prefix = checkpoint_prefix)
+    checkpoint.save(file_prefix=checkpoint_prefix)
 
   print('Epoch {} Loss {:.4f}'.format(epoch + 1,
                                       total_loss / steps_per_epoch))
   print('Time taken for 1 epoch {} sec\n'.format(time.time() - start))
 
-#%%
+# %%
 def evaluate(sentence):
-    attention_plot = np.zeros((max_length_targ, max_length_inp))
+    attention_plot=np.zeros((max_length_targ, max_length_inp))
 
-    sentence = preprocess_sentence(sentence)
+    sentence=preprocess_sentence(sentence)
 
-    inputs = [inp_lang.word_index[i] for i in sentence.split(' ')]
-    inputs = tf.keras.preprocessing.sequence.pad_sequences([inputs],
+    inputs=[inp_lang.word_index[i] for i in sentence.split(' ')]
+    inputs=tf.keras.preprocessing.sequence.pad_sequences([inputs],
                                                            maxlen=max_length_inp,
                                                            padding='post')
-    inputs = tf.convert_to_tensor(inputs)
+    inputs=tf.convert_to_tensor(inputs)
 
-    result = ''
+    result=''
 
-    hidden = [tf.zeros((1, units))]
-    enc_out, enc_hidden = encoder(inputs, hidden)
+    hidden=[tf.zeros((1, units))]
+    enc_out, enc_hidden=encoder(inputs, hidden)
 
-    dec_hidden = enc_hidden
-    dec_input = tf.expand_dims([targ_lang.word_index['<start>']], 0)
+    dec_hidden=enc_hidden
+    dec_input=tf.expand_dims([targ_lang.word_index['<start>']], 0)
 
     for t in range(max_length_targ):
-        predictions, dec_hidden, attention_weights = decoder(dec_input,
+        predictions, dec_hidden, attention_weights=decoder(dec_input,
                                                              dec_hidden,
                                                              enc_out)
 
         # storing the attention weights to plot later on
-        attention_weights = tf.reshape(attention_weights, (-1, ))
-        attention_plot[t] = attention_weights.numpy()
+        attention_weights=tf.reshape(attention_weights, (-1, ))
+        attention_plot[t]=attention_weights.numpy()
 
-        predicted_id = tf.argmax(predictions[0]).numpy()
+        predicted_id=tf.argmax(predictions[0]).numpy()
 
         result += targ_lang.index_word[predicted_id] + ' '
 
@@ -449,18 +468,18 @@ def evaluate(sentence):
             return result, sentence, attention_plot
 
         # the predicted ID is fed back into the model
-        dec_input = tf.expand_dims([predicted_id], 0)
+        dec_input=tf.expand_dims([predicted_id], 0)
 
     return result, sentence, attention_plot
 
-#%%
+# %%
 # function for plotting the attention weights
 def plot_attention(attention, sentence, predicted_sentence):
-    fig = plt.figure(figsize=(10,10))
-    ax = fig.add_subplot(1, 1, 1)
+    fig=plt.figure(figsize=(10, 10))
+    ax=fig.add_subplot(1, 1, 1)
     ax.matshow(attention, cmap='viridis')
 
-    fontdict = {'fontsize': 14}
+    fontdict={'fontsize': 14}
 
     ax.set_xticklabels([''] + sentence, fontdict=fontdict, rotation=90)
     ax.set_yticklabels([''] + predicted_sentence, fontdict=fontdict)
@@ -470,16 +489,17 @@ def plot_attention(attention, sentence, predicted_sentence):
 
     plt.show()
 
-#%%
+# %%
 def translate(sentence):
-    result, sentence, attention_plot = evaluate(sentence)
+    result, sentence, attention_plot=evaluate(sentence)
 
     print('Input: %s' % (sentence))
     print('Predicted translation: {}'.format(result))
 
-    attention_plot = attention_plot[:len(result.split(' ')), :len(sentence.split(' '))]
+    attention_plot=attention_plot[:len(
+        result.split(' ')), :len(sentence.split(' '))]
     plot_attention(attention_plot, sentence.split(' '), result.split(' '))
 
-#%%
+# %%
 checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
 translate(u'hace mucho frio aqui.')

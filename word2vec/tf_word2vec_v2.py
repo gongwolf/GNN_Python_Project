@@ -83,8 +83,9 @@ def generate_batch(data, batch_size, num_skips, skip_window):
     print(span)
     print(data[:span])
     print(buffer)
+    print(data_index)
     
-    for i in range(batch_size // num_skips):
+    for i in range(batch_size // num_skips): #for each words, generate num_skips instance
         target = skip_window  # input word at the center of the buffer
         targets_to_avoid = [skip_window]
         for j in range(num_skips):
@@ -93,7 +94,7 @@ def generate_batch(data, batch_size, num_skips, skip_window):
             targets_to_avoid.append(target)
             batch[i * num_skips + j] = buffer[skip_window]  # this is the input word
             context[i * num_skips + j, 0] = buffer[target]  # these are the context words
-        #add next works to the buffer
+        #add next word to the buffer
         buffer.append(data[data_index])
         data_index = (data_index + 1) % len(data)
     # Backtrack a little bit to avoid skipping words in the end of a batch
@@ -111,8 +112,10 @@ skip_window = 2       # How many words to consider left and right.
 num_skips = 2         # How many times to reuse an input to generate a label.
 
 #%%
+print(data)
 batch_inputs, batch_context = generate_batch(data,batch_size, num_skips, skip_window)
-
+print(batch_inputs)
+print(batch_context)
 
 #%%
 # We pick a random validation set to sample nearest neighbors. Here we limit the
